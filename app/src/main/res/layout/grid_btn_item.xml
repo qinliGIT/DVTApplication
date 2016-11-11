@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/btn_grid_for_item"
+        android:textColor="@android:color/holo_blue_dark"
+        android:layout_width="match_parent"
+        android:gravity="center_horizontal"
+        android:text="45"
+        android:textSize="11dp"
+        android:padding="8dp"
+        android:background="@color/grid_bac_grey"
+        android:layout_margin="5dp"
+        android:layout_height="wrap_content" />
+</LinearLayout>
