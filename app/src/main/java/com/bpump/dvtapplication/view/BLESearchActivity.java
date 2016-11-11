@@ -138,7 +138,7 @@ public class BLESearchActivity extends AppCompatActivity implements OnItemClickL
 
 			}
 		} else {
-
+			Toast.makeText(BLESearchActivity.this, R.string.action_settings, Toast.LENGTH_SHORT).show();
 		}
 	}
 	@Override
