@@ -2,7 +2,7 @@ package com.bpump.dvtapplication.view;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.Activity;
+import android.annotation.TargetApi;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
@@ -29,13 +29,16 @@ import android.widget.Toast;
 
 import com.bpump.dvtapplication.MainActivity;
 import com.bpump.dvtapplication.R;
+import com.bpump.dvtapplication.adapter.BLE_ListAdapter;
 
 import java.util.ArrayList;
 
 public class BLESearchActivity extends AppCompatActivity implements OnItemClickListener,
 		OnClickListener {
-	private BleDeviceListAdapter mLeDeviceListAdapter;
+	private BLE_ListAdapter mLeDeviceListAdapter;
 	private BluetoothAdapter mBluetoothAdapter;
+	private ArrayList<BluetoothDevice> mLeDevices = new ArrayList<BluetoothDevice>();
+
 	@SuppressWarnings("unused")
 	private boolean mScanning = true;
 	private Handler mHandler;
@@ -44,8 +47,9 @@ public class BLESearchActivity extends AppCompatActivity implements OnItemClickL
 	// 10秒后停止查找搜索.
 	private static final long SCAN_PERIOD = 20000;
 
-	private static final int REQUEST_FINE_LOCATION=0;
+	private static final int REQUEST_FINE_LOCATION = 0;
 
+	@TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		// TODO Auto-generated method stub
@@ -89,16 +93,15 @@ public class BLESearchActivity extends AppCompatActivity implements OnItemClickL
 		if (!mBluetoothAdapter.isEnabled()) {
 			mBluetoothAdapter.enable();
 		}
-		mLeDeviceListAdapter = new BleDeviceListAdapter();
+		mLeDeviceListAdapter = new BLE_ListAdapter(BLESearchActivity.this,mLeDevices);
 		listview.setAdapter(mLeDeviceListAdapter);
 		scanLeDevice(true);
 	}
 
 	/**
 	 * 搜索蓝牙
-	 * 
-	 * @param enable
-	 *            是否开始搜索
+	 *
+	 * @param enable 是否开始搜索
 	 */
 	@SuppressLint("NewApi")
 	private void scanLeDevice(final boolean enable) {
@@ -127,20 +130,21 @@ public class BLESearchActivity extends AppCompatActivity implements OnItemClickL
 	private void mayRequestLocation() {
 		if (Build.VERSION.SDK_INT >= 23) {
 			int checkCallPhonePermission = ContextCompat.checkSelfPermission(BLESearchActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION);
-			if(checkCallPhonePermission != PackageManager.PERMISSION_GRANTED){
+			if (checkCallPhonePermission != PackageManager.PERMISSION_GRANTED) {
 				//判断是否需要 向用户解释，为什么要申请该权限
-				if(ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_COARSE_LOCATION))
+				if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_COARSE_LOCATION))
 					Toast.makeText(BLESearchActivity.this, R.string.action_settings, Toast.LENGTH_SHORT).show();
 
-				ActivityCompat.requestPermissions(this ,new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},REQUEST_FINE_LOCATION);
+				ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_FINE_LOCATION);
 				return;
-			}else{
+			} else {
 
 			}
 		} else {
 			Toast.makeText(BLESearchActivity.this, R.string.action_settings, Toast.LENGTH_SHORT).show();
 		}
 	}
+
 	@Override
 	public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
 										   @NonNull int[] grantResults) {
@@ -152,7 +156,7 @@ public class BLESearchActivity extends AppCompatActivity implements OnItemClickL
 					if (mScanning == false) {
 						scanLeDevice(true);
 					}
-				} else{
+				} else {
 					// The user disallowed the requested permission.
 				}
 				break;
@@ -168,7 +172,7 @@ public class BLESearchActivity extends AppCompatActivity implements OnItemClickL
 
 		@Override
 		public void onLeScan(final BluetoothDevice device, int rssi,
-				byte[] scanRecord) {
+							 byte[] scanRecord) {
 			runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
@@ -180,94 +184,96 @@ public class BLESearchActivity extends AppCompatActivity implements OnItemClickL
 	};
 
 	/**
+
+	/**
 	 * 蓝牙列表适配器
-	 * 
+	 *
 	 * @author qinli 于2016年8月17
-	 * 
 	 */
-	private class BleDeviceListAdapter extends BaseAdapter {
-		private ArrayList<BluetoothDevice> mLeDevices;
-		private LayoutInflater mInflator;
+//	private class BleDeviceListAdapter extends BaseAdapter {
+//		private ArrayList<BluetoothDevice> mLeDevices;
+//		private LayoutInflater mInflator;
+//
+//		public BleDeviceListAdapter() {
+//			super();
+//			mLeDevices = new ArrayList<BluetoothDevice>();
+//			mInflator = BLESearchActivity.this.getLayoutInflater();
+//		}
+//
+//		public void addDevice(BluetoothDevice device) {
+//			if (!mLeDevices.contains(device)) {
+//				mLeDevices.add(device);
+//			}
+//		}
+//
+//		public BluetoothDevice getDevice(int position) {
+//			return mLeDevices.get(position);
+//		}
+//
+//		public void clear() {
+//			mLeDevices.clear();
+//		}
+//
+//		@Override
+//		public int getCount() {
+//			return mLeDevices.size();
+//		}
+//
+//		@Override
+//		public Object getItem(int i) {
+//			return mLeDevices.get(i);
+//		}
+//
+//		@Override
+//		public long getItemId(int i) {
+//			return i;
+//		}
+//
+//		@Override
+//		public View getView(int i, View view, ViewGroup viewGroup) {
+//			ViewHolder viewHolder;
+//			if (view == null) {
+//				view = mInflator.inflate(R.layout.listitem_device, null);
+//				viewHolder = new ViewHolder();
+//				viewHolder.deviceAddress = (TextView) view
+//						.findViewById(R.id.device_address);
+//				viewHolder.deviceName = (TextView) view
+//						.findViewById(R.id.device_name);
+//				view.setTag(viewHolder);
+//			} else {
+//				viewHolder = (ViewHolder) view.getTag();
+//			}
+//			BluetoothDevice device = mLeDevices.get(i);
+//			final String deviceName = device.getName();
+//			if (deviceName != null && deviceName.length() > 0)
+//				viewHolder.deviceName.setText(deviceName);
+//			else
+//				viewHolder.deviceName.setText("未知设备");
+//			viewHolder.deviceAddress.setText(device.getAddress());
+//
+//			return view;
+//		}
+//	}
+//
+//	static class ViewHolder {
+//		TextView deviceName;
+//		TextView deviceAddress;
+//	}
 
-		public BleDeviceListAdapter() {
-			super();
-			mLeDevices = new ArrayList<BluetoothDevice>();
-			mInflator = BLESearchActivity.this.getLayoutInflater();
-		}
-
-		public void addDevice(BluetoothDevice device) {
-			if (!mLeDevices.contains(device)) {
-				mLeDevices.add(device);
-			}
-		}
-
-		public BluetoothDevice getDevice(int position) {
-			return mLeDevices.get(position);
-		}
-
-		public void clear() {
-			mLeDevices.clear();
-		}
-
-		@Override
-		public int getCount() {
-			return mLeDevices.size();
-		}
-
-		@Override
-		public Object getItem(int i) {
-			return mLeDevices.get(i);
-		}
-
-		@Override
-		public long getItemId(int i) {
-			return i;
-		}
-
-		@Override
-		public View getView(int i, View view, ViewGroup viewGroup) {
-			ViewHolder viewHolder;
-			if (view == null) {
-				view = mInflator.inflate(R.layout.listitem_device, null);
-				viewHolder = new ViewHolder();
-				viewHolder.deviceAddress = (TextView) view
-						.findViewById(R.id.device_address);
-				viewHolder.deviceName = (TextView) view
-						.findViewById(R.id.device_name);
-				view.setTag(viewHolder);
-			} else {
-				viewHolder = (ViewHolder) view.getTag();
-			}
-			BluetoothDevice device = mLeDevices.get(i);
-			final String deviceName = device.getName();
-			if (deviceName != null && deviceName.length() > 0)
-				viewHolder.deviceName.setText(deviceName);
-			else
-				viewHolder.deviceName.setText("未知设备");
-			viewHolder.deviceAddress.setText(device.getAddress());
-
-			return view;
-		}
-	}
-
-	static class ViewHolder {
-		TextView deviceName;
-		TextView deviceAddress;
-	}
-
+	@TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
 	@Override
 	public void onClick(View arg0) {
 		// TODO Auto-generated method stub
 		switch (arg0.getId()) {
-		case R.id.search:// 搜索
-			mBluetoothAdapter.stopLeScan(mLeScanCallback);
-			mLeDeviceListAdapter.clear();
-			mLeDeviceListAdapter.notifyDataSetChanged();
-			scanLeDevice(true);
-			break;
+			case R.id.search:// 搜索
+				mBluetoothAdapter.stopLeScan(mLeScanCallback);
+				mLeDeviceListAdapter.clear();
+				mLeDeviceListAdapter.notifyDataSetChanged();
+				scanLeDevice(true);
+				break;
 
-		default:
-			break;
+			default:
+				break;
 		}
 	}
 
@@ -282,7 +288,7 @@ public class BLESearchActivity extends AppCompatActivity implements OnItemClickL
 			return;
 		}
 		Intent in = new Intent(BLESearchActivity.this, MainActivity.class);
-		in.putExtra("adress",device.getAddress());
+		in.putExtra("adress", device.getAddress());
 		startActivity(in);
 	}
 }
